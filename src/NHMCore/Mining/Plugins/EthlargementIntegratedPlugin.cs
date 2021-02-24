@@ -277,6 +277,10 @@ namespace NHMCore.Mining.Plugins
 
         public void InitAndCheckSupportedDevices(IEnumerable<BaseDevice> devices)
         {
+            // Filter out supported ones
+            _systemContainsSupportedDevices = devices.Any(dev => IsSupportedDeviceName(dev.Name));
+            if (!_systemContainsSupportedDevices) return;
+
             // set ethlargement path
             _ethlargementBinPath = EthlargementBinPath();
             _ethlargementCwdPath = EthlargementCwdPath();
@@ -303,8 +307,6 @@ namespace NHMCore.Mining.Plugins
             var readFromFileEnvSysVars = InternalConfigs.InitInternalSetting(pluginRoot, _ethlargementSettings, "EthlargementSettings.json");
             if (readFromFileEnvSysVars != null && readFromFileEnvSysVars.UseUserSettings) _ethlargementSettings = readFromFileEnvSysVars;
 
-            // Filter out supported ones
-            _systemContainsSupportedDevices = devices.Any(dev => IsSupportedDeviceName(dev.Name));
             OnPropertyChanged(nameof(SystemContainsSupportedDevices));
             OnPropertyChanged(nameof(SystemContainsSupportedDevicesNotSystemElevated));
         }
@@ -339,7 +341,7 @@ namespace NHMCore.Mining.Plugins
             }
         }
 
-        protected bool IsSupportedDeviceName(string deviceName)
+        public bool IsSupportedDeviceName(string deviceName)
         {
             try
             {

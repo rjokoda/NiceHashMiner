@@ -445,6 +445,7 @@ namespace NHMCore.Mining.Plugins
                 // check if we have missing files after the download 
                 if (plugin.HasMisingBinaryPackageFiles()) AvailableNotifications.CreateMissingMinerBinsInfo(plugin.Name);
             }
+            CrossReferenceInstalledWithOnline();
         }
 
         private static string PluginInstallProgressStateToString(PluginInstallProgressState state, string pluginName, int progressPerc)
@@ -640,7 +641,7 @@ namespace NHMCore.Mining.Plugins
                 {
                     PluginsPackagesInfosCRs[uuid] = new PluginPackageInfoCR(uuid);
                 }
-                var ethlargementPluginContainer = PluginContainer.PluginContainers.FirstOrDefault(p => p.PluginUUID == EthlargementIntegratedPlugin.Instance.PluginUUID);
+                //var ethlargementPluginContainer = PluginContainer.PluginContainers.FirstOrDefault(p => p.PluginUUID == EthlargementIntegratedPlugin.Instance.PluginUUID);
                 if (EthlargementIntegratedPlugin.Instance.IsInstalled)
                 {
                     var localPluginInfo = new PluginPackageInfo
@@ -670,11 +671,8 @@ namespace NHMCore.Mining.Plugins
                 PluginsPackagesInfosCRs[uuid].OnlineInfo = online;
                 if (online.SupportedDevicesAlgorithms != null)
                 {
-                    var supportedDevices = online.SupportedDevicesAlgorithms
-                        .Where(kvp => kvp.Value.Count > 0)
-                        .Select(kvp => kvp.Key);
                     var devRank = AvailableDevices.Devices
-                        .Where(d => supportedDevices.Contains(d.DeviceType.ToString()))
+                        .Where(d => EthlargementIntegratedPlugin.Instance.IsSupportedDeviceName(d.BaseDevice.Name.ToLower()))
                         .Count();
                     PluginsPackagesInfosCRs[uuid].OnlineSupportedDeviceCount = devRank;
                 }
@@ -716,13 +714,27 @@ namespace NHMCore.Mining.Plugins
                 PluginsPackagesInfosCRs[uuid].OnlineInfo = online;
                 if (online.SupportedDevicesAlgorithms != null)
                 {
-                    var supportedDevices = online.SupportedDevicesAlgorithms
+                    // Ethlargement special case
+                    if (uuid == EthlargementIntegratedPlugin.Instance.PluginUUID)
+                    {
+                        if (online.SupportedDevicesAlgorithms != null)
+                        {
+                            var devRank = AvailableDevices.Devices
+                                .Where(d => EthlargementIntegratedPlugin.Instance.IsSupportedDeviceName(d.BaseDevice.Name.ToLower()))
+                                .Count();
+                            PluginsPackagesInfosCRs[uuid].OnlineSupportedDeviceCount = devRank;
+                        }
+                    }
+                    else
+                    {
+                        var supportedDevices = online.SupportedDevicesAlgorithms
                         .Where(kvp => kvp.Value.Count > 0)
                         .Select(kvp => kvp.Key);
-                    var devRank = AvailableDevices.Devices
-                        .Where(d => supportedDevices.Contains(d.DeviceType.ToString()))
-                        .Count();
-                    PluginsPackagesInfosCRs[uuid].OnlineSupportedDeviceCount = devRank;
+                        var devRank = AvailableDevices.Devices
+                            .Where(d => supportedDevices.Contains(d.DeviceType.ToString()))
+                            .Count();
+                        PluginsPackagesInfosCRs[uuid].OnlineSupportedDeviceCount = devRank;
+                    }                  
                 }
             }
 
